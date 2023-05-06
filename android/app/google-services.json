@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "946280191970",
+    "project_id": "fir-shopping-app-af7b4",
+    "storage_bucket": "fir-shopping-app-af7b4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:946280191970:android:0852d6c934fe8fa2f18bbb",
+        "android_client_info": {
+          "package_name": "com.example.firebase_shopping_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "946280191970-fned2fhk75mg2qaj42ki4h76hkd2vaa1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.firebase_shopping_app",
+            "certificate_hash": "7a4d2d7836c97fb371f0bcc068f6b41c9c0e76fc"
+          }
+        },
+        {
+          "client_id": "946280191970-ngdq15lkuhs0vvj13kqg6vv8h4qf6nb1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqr-3cuhheic4RpoXHU3dW8O7l2hTFykg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "946280191970-ngdq15lkuhs0vvj13kqg6vv8h4qf6nb1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
