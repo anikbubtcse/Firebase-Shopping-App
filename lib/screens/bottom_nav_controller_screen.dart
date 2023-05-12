@@ -1,5 +1,7 @@
+import 'package:firebase_shopping_app/provider/cart_provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
+import 'package:badges/badges.dart' as badges;
+import 'package:provider/provider.dart';
 import '../const/appcolors.dart';
 import '../screens/bottom_nav_pages/cart.dart';
 import '../screens/bottom_nav_pages/favorite.dart';
@@ -16,10 +18,16 @@ class BottomNavController extends StatefulWidget {
 
 class _BottomNavControllerState extends State<BottomNavController> {
   int _selectedIndex = 0;
-  final List<Widget> _pages = [Home(), Favorite(), Cart(), Profile()];
+  final List<Widget> _pages = [
+    Home(),
+    Favorite(),
+    Cart(),
+    Profile(),
+  ];
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<CartProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('E Commerce'),
@@ -32,7 +40,18 @@ class _BottomNavControllerState extends State<BottomNavController> {
           BottomNavigationBarItem(
               icon: Icon(Icons.favorite, size: 30.w), label: 'Favorite'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.add_shopping_cart, size: 30.w), label: 'Cart'),
+            label: 'Cart',
+            icon: badges.Badge(
+              badgeContent: Text(provider.totalCartItem().toString()),
+              badgeStyle: const badges.BadgeStyle(
+                badgeColor: Colors.amber,
+                elevation: 4,
+                padding: EdgeInsets.all(5),
+                shape: badges.BadgeShape.circle,
+              ),
+              child: Icon((Icons.remove_shopping_cart)),
+            ),
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person, size: 30.w),
             label: 'Profile',

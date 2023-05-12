@@ -1,12 +1,13 @@
-import 'dart:async';
-
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_shopping_app/provider/cart_provider.dart';
+import 'package:firebase_shopping_app/provider/favorite_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 
 import '../const/appcolors.dart';
 
@@ -21,70 +22,6 @@ class ProductDetailsPage extends StatefulWidget {
 
 class _ProductDetailsPageState extends State<ProductDetailsPage> {
   double _position = 0;
-  bool _check = false;
-
-  Future _addToCart() async {
-    CollectionReference users = FirebaseFirestore.instance
-        .collection('cart')
-        .doc(FirebaseAuth.instance.currentUser!.email)
-        .collection('items');
-
-    return users
-        .doc()
-        .set({
-          'image_path': widget.productDetails['image_path'],
-          'price': widget.productDetails['price'],
-          'name': widget.productDetails['name']
-        })
-        .then((value) =>
-            Fluttertoast.showToast(msg: 'Successfully added to cart'))
-        .catchError((error) => print("Failed to add user: $error"));
-  }
-
-  Future _checkExistingData() async {
-    FirebaseFirestore.instance
-        .collection('favorite')
-        .doc(FirebaseAuth.instance.currentUser!.email)
-        .collection('items')
-        .get()
-        .then((QuerySnapshot querySnapshot) {
-      querySnapshot.docs.forEach((doc) {
-        if (doc['name'] == widget.productDetails['name']) {
-          setState(() {
-            _check = true;
-          });
-        }
-      });
-    });
-  }
-
-  @override
-  void initState() {
-    _checkExistingData();
-    super.initState();
-  }
-
-  Future _addToFavorite() async {
-    if (_check == true) {
-      Fluttertoast.showToast(msg: 'Already added to favorite');
-    } else if (_check == false) {
-      CollectionReference users = FirebaseFirestore.instance
-          .collection('favorite')
-          .doc(FirebaseAuth.instance.currentUser!.email)
-          .collection('items');
-
-      return users
-          .doc()
-          .set({
-            'image_path': widget.productDetails['image_path'],
-            'price': widget.productDetails['price'],
-            'name': widget.productDetails['name']
-          })
-          .then((value) =>
-              Fluttertoast.showToast(msg: 'Successfully added to favorite'))
-          .catchError((error) => print("Failed to add user: $error"));
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,17 +29,38 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 8.w),
-            child: CircleAvatar(
-                backgroundColor: AppColors.deep_orange,
-                child: IconButton(
-                    onPressed: () {
-                      _addToFavorite();
-                    },
-                    icon: _check == false
-                        ? Icon(Icons.favorite_outline)
-                        : Icon(Icons.favorite))),
+          StreamBuilder(
+            stream: FirebaseFirestore.instance
+                .collection('favorite')
+                .doc(FirebaseAuth.instance.currentUser!.email)
+                .collection('items')
+                .where('name', isEqualTo: widget.productDetails['name'])
+                .snapshots(),
+            builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+              if (!snapshot.hasData) {
+                return Container();
+              }
+
+              return Consumer<FavoriteProvider>(
+                builder: (context, value, child) {
+                  return Padding(
+                    padding: EdgeInsets.only(right: 8.w),
+                    child: CircleAvatar(
+                        backgroundColor: AppColors.deep_orange,
+                        child: IconButton(
+                            onPressed: () {
+                              snapshot.data.docs.length == 0
+                                  ? value.addToFavorite(widget.productDetails)
+                                  : Fluttertoast.showToast(
+                                      msg: 'already added to favorite');
+                            },
+                            icon: snapshot.data.docs.length == 0
+                                ? Icon(Icons.favorite_outline)
+                                : Icon(Icons.favorite))),
+                  );
+                },
+              );
+            },
           ),
         ],
         leading: Padding(
@@ -191,27 +149,42 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Container(
-                        width: ScreenUtil().screenWidth,
-                        margin: EdgeInsets.only(bottom: 20.w),
-                        decoration: BoxDecoration(
-                            color: AppColors.deep_orange,
-                            borderRadius: BorderRadius.circular(10)),
-                        child: TextButton(
-                          onPressed: () {
-                            _addToCart();
-                          },
-                          child: Text(
-                            'ADD TO CART',
-                            style:
-                                TextStyle(color: Colors.white, fontSize: 20.sp),
-                          ),
-                        ),
-                      ),
-                    ),
+                  StreamBuilder(
+                    stream: FirebaseFirestore.instance
+                        .collection('cart')
+                        .doc(FirebaseAuth.instance.currentUser!.email)
+                        .collection('items')
+                        .where('name', isEqualTo: widget.productDetails['name'])
+                        .snapshots(),
+                    builder: (BuildContext context,
+                        AsyncSnapshot<dynamic> snapshot) {
+                      if (!snapshot.hasData) {
+                        return Text('');
+                      }
+                      return Consumer<CartProvider>(
+                        builder: (BuildContext context, value, Widget? child) {
+                          return Expanded(
+                            child: Align(
+                              alignment: Alignment.bottomCenter,
+                              child: SizedBox(
+                                width: ScreenUtil().screenWidth,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    snapshot.data.docs.length == 0
+                                        ? value.addToCart(widget.productDetails)
+                                        : Fluttertoast.showToast(
+                                            msg: 'Already added to cart');
+                                  },
+                                  child: const Text(
+                                    'ADD TO CART',
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
                 ],
               ),

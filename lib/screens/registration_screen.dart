@@ -1,54 +1,18 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_shopping_app/const/appcolors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
+import '../provider/registration_provider.dart';
 
-class RegistrationScreen extends StatefulWidget {
-  @override
-  State<RegistrationScreen> createState() => _RegistrationScreenState();
-}
-
-class _RegistrationScreenState extends State<RegistrationScreen> {
+class RegistrationScreen extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
+
   final TextEditingController _passwordController = TextEditingController();
-
-  bool _obsecureText = true;
-
-  _signUp() async {
-    if (_emailController.text.isNotEmpty &&
-        _passwordController.text.isNotEmpty) {
-      try {
-        final credential =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-
-        var userCredential = credential.user;
-
-        if (userCredential!.uid.isNotEmpty) {
-          Navigator.of(context).pushNamed('/user_form_screen');
-        } else {
-          Fluttertoast.showToast(msg: 'Something wrong');
-        }
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'weak-password') {
-          Fluttertoast.showToast(msg: 'The password provided is too weak.');
-        } else if (e.code == 'email-already-in-use') {
-          Fluttertoast.showToast(
-              msg: 'The account already exists for that email.');
-        }
-      } catch (e) {
-        print(e);
-      }
-    } else {
-      Fluttertoast.showToast(msg: 'Email and Password must be provided');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<RegistrationProvider>(context, listen: true);
+
     return Scaffold(
       backgroundColor: AppColors.deep_orange,
       body: Column(
@@ -132,7 +96,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         Expanded(
                             child: TextField(
                           keyboardType: TextInputType.emailAddress,
-                          onSubmitted: (_) => _signUp(),
+                          onSubmitted: (_) => provider.signUp(
+                              _emailController, _passwordController, context),
                           controller: _emailController,
                           decoration: InputDecoration(
                               hintText: 'anikbubtcse@gmail.com',
@@ -170,9 +135,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         Expanded(
                             child: TextField(
                           controller: _passwordController,
-                          onSubmitted: (_) => _signUp(),
+                          onSubmitted: (_) => provider.signUp(
+                              _emailController, _passwordController, context),
                           keyboardType: TextInputType.visiblePassword,
-                          obscureText: _obsecureText,
+                          obscureText: provider.obsecureText,
                           decoration: InputDecoration(
                               hintText: 'password must be in 6 characters',
                               hintStyle: TextStyle(
@@ -181,12 +147,10 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                               labelStyle: TextStyle(
                                   fontSize: 15.sp,
                                   color: AppColors.deep_orange),
-                              suffixIcon: _obsecureText == false
+                              suffixIcon: provider.obsecureText == false
                                   ? IconButton(
                                       onPressed: () {
-                                        setState(() {
-                                          _obsecureText = true;
-                                        });
+                                        provider.toggleobsecureText();
                                       },
                                       icon: Icon(
                                         Icons.remove_red_eye,
@@ -194,9 +158,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                                       ))
                                   : IconButton(
                                       onPressed: () {
-                                        setState(() {
-                                          _obsecureText = false;
-                                        });
+                                        provider.toggleobsecureText();
                                       },
                                       icon: Icon(Icons.visibility_off))),
                         )),
@@ -211,7 +173,8 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                           color: AppColors.deep_orange,
                           borderRadius: BorderRadius.circular(10.r)),
                       child: TextButton(
-                          onPressed: _signUp,
+                          onPressed: ()  => provider.signUp(
+                              _emailController, _passwordController, context),
                           child: Text(
                             'CONTINUE',
                             style:

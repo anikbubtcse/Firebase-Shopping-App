@@ -1,46 +1,28 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_shopping_app/const/appcolors.dart';
+import 'package:firebase_shopping_app/provider/profile_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:provider/provider.dart';
 
-class Profile extends StatefulWidget {
-  const Profile({Key? key}) : super(key: key);
-
-  @override
-  State<Profile> createState() => _ProfileState();
-}
-
-class _ProfileState extends State<Profile> {
+class Profile extends StatelessWidget {
   final TextEditingController _nameController = TextEditingController();
+
   final TextEditingController _ageController = TextEditingController();
+
   final TextEditingController _phoneController = TextEditingController();
-
-  _updateUserData() {
-    CollectionReference users = FirebaseFirestore.instance.collection('users');
-
-    users
-        .doc(FirebaseAuth.instance.currentUser!.email)
-        .update({
-          'Name': _nameController.text,
-          'Age': _ageController.text,
-          'Phone Number': _phoneController.text
-        })
-        .then((value) =>
-            Fluttertoast.showToast(msg: 'User information has been updated'))
-        .catchError((error) => print("Failed to update user: $error"));
-  }
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<ProfileProvider>(context, listen: true);
+
     return SingleChildScrollView(
       child: Column(
         children: [
           StreamBuilder(
               stream: FirebaseFirestore.instance
                   .collection('users')
-                  .doc(FirebaseAuth.instance.currentUser!.email)
+                  .doc(FirebaseAuth.instance.currentUser?.email)
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
@@ -75,15 +57,21 @@ class _ProfileState extends State<Profile> {
                   ),
                 );
               }),
-          TextButton(
-            style: TextButton.styleFrom(
-              primary: Colors.white,
-              backgroundColor: AppColors.deep_orange,
-            ),
-            onPressed: () {
-              _updateUserData();
-            },
-            child: Text('UPDATE'),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              ElevatedButton(
+                  onPressed: () {
+                    provider.updateUserData(
+                        _nameController, _phoneController, _ageController);
+                  },
+                  child: Text('UPDATE')),
+              ElevatedButton(
+                  onPressed: () {
+                    provider.signOut(context);
+                  },
+                  child: Text('Sign Out'))
+            ],
           )
         ],
       ),

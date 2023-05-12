@@ -2,60 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import '../const/appcolors.dart';
-import '../provider/authentication_provider.dart';
+import '../provider/login_provider.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+class LoginScreen extends StatelessWidget {
 
-  @override
-  State<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends State<LoginScreen> {
-  // _autoSignIn() async {
-  //   final SharedPreferences prefs = await SharedPreferences.getInstance();
-  //
-  //   final String? email = prefs.getString('email');
-  //   final String? password = prefs.getString('password');
-  //   print(email);
-  //   print(password);
-  //
-  //   if (email!.isNotEmpty && password!.isNotEmpty) {
-  //     try {
-  //       final credential =
-  //           await FirebaseAuth.instance.signInWithEmailAndPassword(
-  //         email: email,
-  //         password: password,
-  //       );
-  //
-  //       var userCredential = credential.user;
-  //       final SharedPreferences prefs = await SharedPreferences.getInstance();
-  //       await prefs.setString('email', email);
-  //       await prefs.setString('password', password);
-  //
-  //       if (userCredential!.uid.isNotEmpty) {
-  //         Navigator.of(context).pushNamed('/bottom_nav_screen');
-  //       } else {
-  //         Fluttertoast.showToast(msg: 'Something wrong');
-  //       }
-  //     } on FirebaseAuthException catch (e) {
-  //       if (e.code == 'user-not-found') {
-  //         Fluttertoast.showToast(msg: 'No user found for that email.');
-  //       } else if (e.code == 'wrong-password') {
-  //         Fluttertoast.showToast(msg: 'Wrong password provided for that user.');
-  //       }
-  //     } catch (e) {
-  //       print(e);
-  //     }
-  //   }
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController _emailController = TextEditingController();
-    final TextEditingController _passwordController = TextEditingController();
-    bool _obsecureText = true;
-
-    final provider = Provider.of<AuthenticationProvider>(context, listen: true);
+    final provider = Provider.of<LoginProvider>(context, listen: true);
 
     return Scaffold(
       backgroundColor: AppColors.deep_orange,
@@ -139,9 +95,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         Expanded(
                             child: TextField(
+                          controller: emailController,
                           onSubmitted: (_) => provider.signIn(
-                              _emailController, _passwordController, context),
-                          controller: _emailController,
+                              emailController, passwordController, context),
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
                               hintText: 'anikbubtcse@gmail.com',
@@ -178,11 +134,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         Expanded(
                             child: TextField(
+                          controller: passwordController,
+                          obscureText: provider.obsecureText,
                           onSubmitted: (_) => provider.signIn(
-                              _emailController, _passwordController, context),
-                          controller: _passwordController,
+                              emailController, passwordController, context),
                           keyboardType: TextInputType.visiblePassword,
-                          obscureText: _obsecureText,
                           decoration: InputDecoration(
                               hintText: 'password must be in 6 characters',
                               hintStyle: TextStyle(
@@ -191,24 +147,22 @@ class _LoginScreenState extends State<LoginScreen> {
                               labelStyle: TextStyle(
                                   fontSize: 15.sp,
                                   color: AppColors.deep_orange),
-                              suffixIcon: _obsecureText == false
+                              suffixIcon: provider.obsecureText == true
                                   ? IconButton(
                                       onPressed: () {
-                                        setState(() {
-                                          _obsecureText = true;
-                                        });
+                                        provider.toggleobsecureText();
                                       },
                                       icon: Icon(
-                                        Icons.remove_red_eye,
+                                        Icons.visibility_off,
                                         size: 20.w,
                                       ))
                                   : IconButton(
                                       onPressed: () {
-                                        setState(() {
-                                          _obsecureText = false;
-                                        });
+                                        provider.toggleobsecureText();
                                       },
-                                      icon: Icon(Icons.visibility_off))),
+                                      icon: const Icon(Icons.remove_red_eye))
+
+                          ),
                         )),
                       ],
                     ),
@@ -223,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: TextButton(
                           onPressed: () {
                             provider.signIn(
-                                _emailController, _passwordController, context);
+                                emailController, passwordController, context);
                           },
                           child: Text(
                             'SIGN IN',
