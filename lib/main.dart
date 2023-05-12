@@ -7,12 +7,16 @@ import 'package:firebase_shopping_app/screens/user_forn_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import './screens/splash_screen.dart';
+import 'package:provider/provider.dart';
 
+import 'provider/authentication_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(MyApp());
+  runApp(MultiProvider(providers: [
+    ChangeNotifierProvider(create: (_) => AuthenticationProvider(),)
+  ], child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {

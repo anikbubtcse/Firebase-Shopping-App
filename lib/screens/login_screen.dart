@@ -1,10 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:provider/provider.dart';
 import '../const/appcolors.dart';
+import '../provider/authentication_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -14,90 +12,51 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  bool _obsecureText = true;
-
-  _signIn() async {
-    if (_emailController.text.isNotEmpty &&
-        _passwordController.text.isNotEmpty) {
-      try {
-        final credential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-
-        var userCredential = credential.user;
-        final SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('email', _emailController.text);
-        await prefs.setString('password', _passwordController.text);
-
-        if (userCredential!.uid.isNotEmpty) {
-          Navigator.of(context).pushNamed('/bottom_nav_screen');
-        } else {
-          Fluttertoast.showToast(msg: 'Something wrong');
-        }
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'user-not-found') {
-          Fluttertoast.showToast(msg: 'No user found for that email.');
-        } else if (e.code == 'wrong-password') {
-          Fluttertoast.showToast(msg: 'Wrong password provided for that user.');
-        }
-      } catch (e) {
-        print(e);
-      }
-    } else {
-      Fluttertoast.showToast(msg: 'Email and Password can\'t be empty');
-    }
-  }
-
-  _autoSignIn() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    final String? email = prefs.getString('email');
-    final String? password = prefs.getString('password');
-    print(email);
-    print(password);
-
-    if (email!.isNotEmpty && password!.isNotEmpty) {
-      try {
-        final credential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-
-        var userCredential = credential.user;
-        final SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setString('email', email);
-        await prefs.setString('password', password);
-
-        if (userCredential!.uid.isNotEmpty) {
-          Navigator.of(context).pushNamed('/bottom_nav_screen');
-        } else {
-          Fluttertoast.showToast(msg: 'Something wrong');
-        }
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'user-not-found') {
-          Fluttertoast.showToast(msg: 'No user found for that email.');
-        } else if (e.code == 'wrong-password') {
-          Fluttertoast.showToast(msg: 'Wrong password provided for that user.');
-        }
-      } catch (e) {
-        print(e);
-      }
-    }
-  }
-
-  @override
-  void initState() {
-    _autoSignIn();
-    super.initState();
-  }
+  // _autoSignIn() async {
+  //   final SharedPreferences prefs = await SharedPreferences.getInstance();
+  //
+  //   final String? email = prefs.getString('email');
+  //   final String? password = prefs.getString('password');
+  //   print(email);
+  //   print(password);
+  //
+  //   if (email!.isNotEmpty && password!.isNotEmpty) {
+  //     try {
+  //       final credential =
+  //           await FirebaseAuth.instance.signInWithEmailAndPassword(
+  //         email: email,
+  //         password: password,
+  //       );
+  //
+  //       var userCredential = credential.user;
+  //       final SharedPreferences prefs = await SharedPreferences.getInstance();
+  //       await prefs.setString('email', email);
+  //       await prefs.setString('password', password);
+  //
+  //       if (userCredential!.uid.isNotEmpty) {
+  //         Navigator.of(context).pushNamed('/bottom_nav_screen');
+  //       } else {
+  //         Fluttertoast.showToast(msg: 'Something wrong');
+  //       }
+  //     } on FirebaseAuthException catch (e) {
+  //       if (e.code == 'user-not-found') {
+  //         Fluttertoast.showToast(msg: 'No user found for that email.');
+  //       } else if (e.code == 'wrong-password') {
+  //         Fluttertoast.showToast(msg: 'Wrong password provided for that user.');
+  //       }
+  //     } catch (e) {
+  //       print(e);
+  //     }
+  //   }
 
   @override
   Widget build(BuildContext context) {
+    final TextEditingController _emailController = TextEditingController();
+    final TextEditingController _passwordController = TextEditingController();
+    bool _obsecureText = true;
+
+    final provider = Provider.of<AuthenticationProvider>(context, listen: true);
+
     return Scaffold(
       backgroundColor: AppColors.deep_orange,
       body: Column(
@@ -180,7 +139,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         Expanded(
                             child: TextField(
-                          onSubmitted: (_) => _signIn(),
+                          onSubmitted: (_) => provider.signIn(
+                              _emailController, _passwordController, context),
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
@@ -218,7 +178,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         Expanded(
                             child: TextField(
-                          onSubmitted: (_) => _signIn(),
+                          onSubmitted: (_) => provider.signIn(
+                              _emailController, _passwordController, context),
                           controller: _passwordController,
                           keyboardType: TextInputType.visiblePassword,
                           obscureText: _obsecureText,
@@ -260,7 +221,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           color: AppColors.deep_orange,
                           borderRadius: BorderRadius.circular(10.r)),
                       child: TextButton(
-                          onPressed: _signIn,
+                          onPressed: () {
+                            provider.signIn(
+                                _emailController, _passwordController, context);
+                          },
                           child: Text(
                             'SIGN IN',
                             style:
