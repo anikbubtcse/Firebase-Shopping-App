@@ -7,9 +7,18 @@ class CartProvider extends ChangeNotifier {
   int _totalCartItems = 0;
 
   int get totalCartItems => _totalCartItems;
+<<<<<<< HEAD
 
   List<Map<String, dynamic>> list = [];
 
+=======
+  List<Map<String, dynamic>> list = [];
+
+  num _amount = 0;
+  num get amount => _amount;
+
+
+>>>>>>> 1b33814 (commit 1)
   addToCart(Map productDetails) async {
     CollectionReference users = FirebaseFirestore.instance
         .collection('cart')
@@ -67,4 +76,29 @@ class CartProvider extends ChangeNotifier {
           .catchError((error) => print("Failed to update user: $error"));
     }
   }
+<<<<<<< HEAD
+=======
+
+  Future<num> sumOfCartAmount() async{
+    num totalCartAmount = 0;
+    QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+        .collection('cart')
+        .doc(FirebaseAuth.instance.currentUser!.email)
+        .collection('items')
+        .get();
+
+    querySnapshot.docs.forEach((doc) {
+      totalCartAmount += (doc['counter'] * doc['price']);
+    });
+    return totalCartAmount;
+  }
+
+  Future<void> getCartAmount() async{
+
+    _amount = await sumOfCartAmount();
+    notifyListeners();
+
+  }
+
+>>>>>>> 1b33814 (commit 1)
 }
