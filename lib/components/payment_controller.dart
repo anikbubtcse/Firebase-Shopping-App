@@ -37,7 +37,7 @@ class PaymentController {
 
   createPaymentIntent() async {
     try {
-      Map<String, dynamic> body = {'amount': "100", 'currency': 'USD'};
+      Map<String, dynamic> body = {'amount': "500", 'currency': 'USD'};
       http.Response response = await http.post(
           Uri.parse("https://api.stripe.com/v1/payment_intents"),
           body: body,
